@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的足迹点亮地图</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        header {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .map-section {
+            flex: 3;
+            min-width: 300px;
+        }
+        
+        .control-section {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+        
+        #map-container {
+            width: 100%;
+            height: 600px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            font-size: 1.5rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+        }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #2573a7 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(135deg, #27ae60 0%, #219955 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        .footprints-list {
+            margin-top: 25px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 2px solid #f1f1f1;
+        }
+        
+        .footprint-item {
+            padding: 15px;
+            border-bottom: 1px solid #f1f1f1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        
+        .footprint-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .footprint-item:last-child {
+            border-bottom: none;
+        }
+        
+        .footprint-info {
+            flex: 1;
+        }
+        
+        .footprint-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .footprint-coords {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 4px;
+        }
+        
+        .footprint-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            transition: color 0.3s;
+            padding: 5px;
+        }
+        
+        .icon-btn:hover {
+            color: #3498db;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #f1f1f1;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        /* 自定义标记点样式 */
+        .glow-marker {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        .glow-marker::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(52, 152, 219, 0.4);
+            z-index: -1;
+            animation: ripple 2s infinite;
+        }
+        
+        .glow-marker i {
+            color: white;
+            font-size: 0.8rem;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(52, 152, 219, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+            }
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .footprint-marker {
+            background: #e74c3c;
+            animation: pulse-red 2s infinite;
+        }
+        
+        .footprint-marker::after {
+            background: rgba(231, 76, 60, 0.4);
+        }
+        
+        @keyframes pulse-red {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(231, 76, 60, 0);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+            }
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1100px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            #map-container {
+                height: 450px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-map-marked-alt"></i> 我的足迹点亮地图</h1>
+            <p class="subtitle">记录你去过的每一个地方，点亮你的旅行足迹</p>
+        </header>
+        
+        <div class="main-content">
+            <section class="map-section">
+                <div id="map-container"></div>
+            </section>
+            
+            <section class="control-section">
+                <h2 class="section-title"><i class="fas fa-cogs"></i> 足迹控制面板</h2>
+                
+                <div class="input-group">
+                    <label for="location-name"><i class="fas fa-map-pin"></i> 足迹名称</label>
+                    <input type="text" id="location-name" placeholder="例如：北京天安门" value="我的足迹点">
+                </div>
+                
+                <div class="input-group">
+                    <label for="longitude"><i class="fas fa-globe-americas"></i> 经度</label>
+                    <input type="text" id="longitude" placeholder="例如：116.397428" value="116.397428">
+                </div>
+                
+                <div class="input-group">
+                    <label for="latitude"><i class="fas fa-globe-americas"></i> 纬度</label>
+                    <input type="text" id="latitude" placeholder="例如：39.90923" value="39.90923">
+                </div>
+                
+                <button class="btn btn-primary" onclick="addFootprint()">
+                    <i class="fas fa-plus-circle"></i> 点亮此处足迹
+                </button>
+                
+                <button class="btn btn-success" onclick="addRandomFootprint()">
+                    <i class="fas fa-dice"></i> 随机添加足迹
+                </button>
+                
+                <button class="btn btn-danger" onclick="clearAllFootprints()">
+                    <i class="fas fa-trash-alt"></i> 清空所有足迹
+                </button>
+                
+                <div class="footprints-list" id="footprints-list">
+                    <!-- 足迹列表将在这里动态生成 -->
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-count">0</div>
+                        <div class="stat-label">总足迹数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="visible-count">0</div>
+                        <div class="stat-label">显示中</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=2.0&key=9823450d2472a519a6bdfad1c0bb7900"></script>
+    <script>
+        // 全局变量
+        let map;
+        let allFootprints = [];
+        let infoWindow;
+        
+        // 初始化地图
+        function initMap() {
+            map = new AMap.Map('map-container', {
+                zoom: 11,
+                center: [116.397428, 39.90923], // 默认北京中心
+                resizeEnable: true,
+                viewMode: '2D',
+                mapStyle: 'amap://styles/light'
+            });
+            
+            // 初始化信息窗口
+            infoWindow = new AMap.InfoWindow({
+                offset: new AMap.Pixel(0, -30),
+                autoMove: true
+            });
+            
+            // 监听地图点击事件
+            map.on('click', function(e) {
+                document.getElementById('longitude').value = e.lnglat.getLng().toFixed(6);
+                document.getElementById('latitude').value = e.lnglat.getLat().toFixed(6);
+                
+                // 询问用户是否要在此处添加足迹
+                setTimeout(() => {
+                    if (confirm(`是否在(${e.lnglat.getLng().toFixed(6)}, ${e.lnglat.getLat().toFixed(6)})添加足迹点？`)) {
+                        addFootprint();
+                    }
+                }, 100);
+            });
+            
+            // 加载已保存的足迹
+            loadFootprints();
+            
+            // 更新统计信息
+            updateStats();
+        }
+        
+        // 添加足迹点
+        function addFootprint() {
+            const name = document.getElementById('location-name').value || "未命名足迹";
+            const lng = parseFloat(document.getElementById('longitude').value);
+            const lat = parseFloat(document.getElementById('latitude').value);
+            
+            if (isNaN(lng) || isNaN(lat)) {
+                alert("请输入有效的经纬度！");
+                return;
+            }
+            
+            const id = 'footprint_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            const footprint = {
+                id: id,
+                name: name,
+                lnglat: [lng, lat],
+                date: new Date().toLocaleString()
+            };
+            
+            createMarker(footprint);
+            allFootprints.push(footprint);
+            
+            // 保存到本地存储
+            saveFootprints();
+            
+            // 更新UI
+            updateFootprintList();
+            updateStats();
+            
+            // 地图中心移动到新添加的点
+            map.setCenter([lng, lat]);
+            
+            // 显示添加成功消息
+            showMessage(`成功添加足迹: ${name}`);
+        }
+        
+        // 随机添加足迹点
+        function addRandomFootprint() {
+            // 中国大致的经纬度范围
+            const lng = 73 + Math.random() * (135 - 73);
+            const lat = 18 + Math.random() * (54 - 18);
+            
+            document.getElementById('longitude').value = lng.toFixed(6);
+            document.getElementById('latitude').value = lat.toFixed(6);
+            document.getElementById('location-name').value = `随机足迹${allFootprints.length + 1}`;
+            
+            addFootprint();
+        }
+        
+        // 创建标记点
+        function createMarker(footprint) {
+            // 创建自定义DOM标记
+            const markerContent = document.createElement('div');
+            markerContent.className = 'glow-marker footprint-marker';
+            markerContent.innerHTML = '<i class="fas fa-map-pin"></i>';
+            markerContent.title = footprint.name;
+            markerContent.dataset.id = footprint.id;
+            
+            // 创建高德地图标记
+            const marker = new AMap.Marker({
+                position: footprint.lnglat,
+                content: markerContent,
+                title: footprint.name,
+                offset: new AMap.Pixel(-12, -12)
+            });
+            
+            // 点击标记显示信息
+            marker.on('click', function() {
+                const content = `
+                    <div style="padding: 15px; max-width: 250px;">
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50;">${footprint.name}</h3>
+                        <p style="margin: 5px 0; color: #7f8c8d;"><i class="fas fa-clock"></i> ${footprint.date}</p>
+                        <p style="margin: 5px 0; color: #7f8c8d;"><i class="fas fa-globe-americas"></i> 经度: ${footprint.lnglat[0].toFixed(6)}</p>
+                        <p style="margin: 5px 0; color: #7f8c8d;"><i class="fas fa-globe-americas"></i> 纬度: ${footprint.lnglat[1].toFixed(6)}</p>
+                        <button onclick="removeFootprint('${footprint.id}')" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                            <i class="fas fa-trash"></i> 删除此足迹
+                        </button>
+                    </div>
+                `;
+                
+                infoWindow.setContent(content);
+                infoWindow.open(map, footprint.lnglat);
+            });
+            
+            // 添加到地图
+            map.add(marker);
+            
+            // 保存标记引用
+            footprint.marker = marker;
+        }
+        
+        // 更新足迹列表
+        function updateFootprintList() {
+            const listContainer = document.getElementById('footprints-list');
+            listContainer.innerHTML = '';
+            
+            if (allFootprints.length === 0) {
+                listContainer.innerHTML = '<div class="footprint-item" style="justify-content: center; color: #7f8c8d;">暂无足迹，点击地图或添加按钮开始记录</div>';
+                return;
+            }
+            
+            // 按添加时间倒序排列
+            const sortedFootprints = [...allFootprints].reverse();
+            
+            sortedFootprints.forEach(footprint => {
+                const item = document.createElement('div');
+                item.className = 'footprint-item';
+                item.dataset.id = footprint.id;
+                
+                item.innerHTML = `
+                    <div class="footprint-info">
+                        <div class="footprint-name">${footprint.name}</div>
+                        <div class="footprint-coords">${footprint.lnglat[0].toFixed(6)}, ${footprint.lnglat[1].toFixed(6)}</div>
+                        <div class="footprint-coords">${footprint.date}</div>
+                    </div>
+                    <div class="footprint-actions">
+                        <button class="icon-btn" onclick="focusOnFootprint('${footprint.id}')" title="定位">
+                            <i class="fas fa-search-location"></i>
+                        </button>
+                        <button class="icon-btn" onclick="removeFootprint('${footprint.id}')" title="删除">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                
+                listContainer.appendChild(item);
+            });
+        }
+        
+        // 聚焦到特定足迹
+        function focusOnFootprint(id) {
+            const footprint = allFootprints.find(f => f.id === id);
+            if (footprint) {
+                map.setCenter(footprint.lnglat);
+                map.setZoom(15);
+                
+                // 触发标记点击事件以显示信息窗口
+                if (footprint.marker) {
+                    footprint.marker.emit('click', {target: footprint.marker});
+                }
+            }
+        }
+        
+        // 删除足迹
+        function removeFootprint(id) {
+            const footprintIndex = allFootprints.findIndex(f => f.id === id);
+            if (footprintIndex !== -1) {
+                const footprint = allFootprints[footprintIndex];
+                
+                // 从地图移除标记
+                if (footprint.marker) {
+                    map.remove(footprint.marker);
+                }
+                
+                // 从数组中移除
+                allFootprints.splice(footprintIndex, 1);
+                
+                // 保存到本地存储
+                saveFootprints();
+                
+                // 更新UI
+                updateFootprintList();
+                updateStats();
+                
+                // 关闭信息窗口
+                infoWindow.close();
+                
+                showMessage(`已删除足迹: ${footprint.name}`);
+            }
+        }
+        
+        // 清空所有足迹
+        function clearAllFootprints() {
+            if (allFootprints.length === 0) {
+                alert("当前没有足迹可清除！");
+                return;
+            }
+            
+            if (confirm(`确定要清空所有 ${allFootprints.length} 个足迹点吗？此操作不可撤销！`)) {
+                // 从地图移除所有标记
+                allFootprints.forEach(footprint => {
+                    if (footprint.marker) {
+                        map.remove(footprint.marker);
+                    }
+                });
+                
+                // 清空数组
+                allFootprints = [];
+                
+                // 清除本地存储
+                localStorage.removeItem('footprints');
+                
+                // 更新UI
+                updateFootprintList();
+                updateStats();
+                
+                // 关闭信息窗口
+                infoWindow.close();
+                
+                showMessage("已清空所有足迹点");
+            }
+        }
+        
+        // 保存足迹到本地存储
+        function saveFootprints() {
+            // 只保存必要数据，避免循环引用
+            const footprintsToSave = allFootprints.map(f => ({
+                id: f.id,
+                name: f.name,
+                lnglat: f.lnglat,
+                date: f.date
+            }));
+            
+            localStorage.setItem('footprints', JSON.stringify(footprintsToSave));
+        }
+        
+        // 从本地存储加载足迹
+        function loadFootprints() {
+            const savedFootprints = localStorage.getItem('footprints');
+            
+            if (savedFootprints) {
+                try {
+                    const parsedFootprints = JSON.parse(savedFootprints);
+                    
+                    parsedFootprints.forEach(footprint => {
+                        allFootprints.push(footprint);
+                        createMarker(footprint);
+                    });
+                    
+                    updateFootprintList();
+                } catch (e) {
+                    console.error("加载足迹数据失败:", e);
+                    localStorage.removeItem('footprints');
+                }
+            }
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('total-count').textContent = allFootprints.length;
+            document.getElementById('visible-count').textContent = allFootprints.length;
+        }
+        
+        // 显示消息
+        function showMessage(message) {
+            // 创建一个临时消息元素
+            const messageEl = document.createElement('div');
+            messageEl.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #2ecc71;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-weight: 600;
+                animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+                max-width: 300px;
+            `;
+            
+            messageEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(messageEl);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.parentNode.removeChild(messageEl);
+                }
+            }, 3000);
+        }
+        
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 页面加载完成后初始化地图
+        window.onload = initMap;
+    </script>
+</body>
+</html>
